@@ -4,6 +4,9 @@ from datetime import UTC, datetime
 import pytest
 from httpx2 import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.fakes.observation_repository import FakeObservationRepository
+from tests.fakes.unit_of_work import FakeUnitOfWork
+from tests.fakes.weather_source import FakeWeatherSource
 
 from meteo_service.main import app
 from meteo_service.observations.adapters.api.dependencies import get_observations_use_case
@@ -13,9 +16,6 @@ from meteo_service.observations.domain.observation import Observation
 from meteo_service.observations.domain.station import Station
 from meteo_service.shared.database import Database
 from meteo_service.shared.single_flight import SingleFlight
-from tests.fakes.observation_repository import FakeObservationRepository
-from tests.fakes.unit_of_work import FakeUnitOfWork
-from tests.fakes.weather_source import FakeWeatherSource
 
 
 OBSERVATIONS_PATH = "/api/v1/observations"
