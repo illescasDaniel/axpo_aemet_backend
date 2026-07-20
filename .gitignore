@@ -1,0 +1,19 @@
+# secrets / local env
+.env
+
+# Python
+.venv/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+.basedpyright/
+.pyright/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# local SQLite cache
+data/*.db
+data/*.db-*

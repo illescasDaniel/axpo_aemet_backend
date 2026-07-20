@@ -1,0 +1,1 @@
+See https://github.com/illescasDaniel/quality-ci-checks

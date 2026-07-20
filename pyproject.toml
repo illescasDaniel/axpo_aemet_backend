@@ -1,0 +1,87 @@
+[project]
+name = "meteo-service"
+version = "0.1.0"
+description = "AEMET-backed meteo observations API with SQLite cache"
+readme = "README.md"
+authors = [
+	{ name = "Daniel Illescas Romero", email = "illescas.daniel@protonmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+	"aiosqlite>=0.22.1",
+	"fastapi[standard]>=0.139.2",
+	"httpx2>=2.7.0",
+	"pydantic-settings>=2.14.2",
+	"python-dotenv>=1.2.2",
+	"sqlalchemy[asyncio]>=2.0.51",
+]
+
+[tool.fastapi]
+entrypoint = "meteo_service.main:app"
+
+[build-system]
+requires = ["uv_build>=0.11.29,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+	"basedpyright>=1.29",
+	"pip-audit",
+	"pytest>=9.1.1",
+	"pytest-asyncio>=1.4.0",
+	"pytest-cov",
+	"pytest-httpx2>=1.0.0",
+	"ruff>=0.15.22",
+	"taskipy>=1.14.1",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.format]
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["F", "I", "E", "S", "B"]
+fixable = ["ALL"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/**" = ["S603", "S607"]
+"tests/**" = ["S101"]
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
+executionEnvironments = [
+	{ root = "src" },
+	{ root = "tests", extraPaths = ["src", "."] },
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["src", "."]
+addopts = ["-p", "pytest_httpx2"]
+markers = [
+	"unit: fast isolated tests with mocks",
+	"integration: tests that touch real I/O or external systems",
+]
+
+[tool.taskipy.tasks]
+dev = "uv run fastapi dev"
+run = "uv run fastapi run"
+tests = "uv run pytest"
+format = "uv run ruff check --fix src tests && uv run ruff format src tests"
+checks = "./scripts/quality/checks.sh"
+checks-fix = "./scripts/quality/checks.sh --fix"
