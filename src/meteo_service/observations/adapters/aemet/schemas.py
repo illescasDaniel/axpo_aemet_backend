@@ -20,3 +20,15 @@ class AemetObservation(BaseModel):
     temperature_c: float | None = Field(default=None, alias="temp")
     pressure_hpa: float | None = Field(default=None, alias="pres")
     speed_ms: float | None = Field(default=None, alias="vel")
+
+
+class AemetConvencionalObservation(BaseModel):
+    """Mainland/Canary conventional observation (last ~24h product)."""
+
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
+    station_name: str = Field(alias="ubi")
+    observed_at: datetime = Field(alias="fint")
+    temperature_c: float | None = Field(default=None, alias="ta")
+    pressure_hpa: float | None = Field(default=None, alias="pres")
+    speed_ms: float | None = Field(default=None, alias="vv")

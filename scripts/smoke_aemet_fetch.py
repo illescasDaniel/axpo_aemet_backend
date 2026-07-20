@@ -1,4 +1,4 @@
-"""Quick manual check that the AEMET client can fetch Antarctic observations."""
+"""Quick manual check that the AEMET client can fetch observations."""
 
 import asyncio
 from datetime import UTC, datetime
@@ -12,8 +12,8 @@ from meteo_service.shared.config import get_settings
 from meteo_service.shared.logging import configure_logging
 
 
-# Juan Carlos I = 89064, Gabriel de Castilla = 89070.
-# Prefer austral summer windows; mid-winter often returns AEMET 404 (no data).
+# Antarctic (Antartida product): 89064 / 89070 — use an austral summer window.
+# Mainland (convencional, last ~24h): e.g. 3195 — set start/end to "today" UTC.
 _STATION_ID = "89064"
 
 

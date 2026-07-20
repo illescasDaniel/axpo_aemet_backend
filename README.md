@@ -15,6 +15,7 @@ Edit `.env` and set:
 
 - `AEMET_API_KEY` — register at [AEMET Open Data](https://opendata.aemet.es/centrodedescargas/inicio)
 - `DATABASE_URL` — see `.env.example` (example uses a local SQLite file under `./data/`)
+- `CORS_ORIGINS` — JSON array of SPA origins allowed to call the API directly, e.g. `["http://localhost:3000"]`. Use `[]` only if you never call the API from a browser on another origin (same-origin proxy only).
 
 ## Run the API
 
@@ -32,7 +33,7 @@ Interactive docs: http://127.0.0.1:8000/docs
 GET /api/v1/observations
 ```
 
-Part 1 originally exposed `/api/v1/observations/antartida`. Part 2 asked for a more open station surface, so the public path is the generic `GET /api/v1/observations`. In practice only AEMET’s **Antartida** product matches this assignment’s date-range + ~10‑min + `nombre`/`fhora`/`temp`/`pres`/`vel` shape, so `station_id` is validated to the two Antarctic ids (`89064`, `89070`). Other ids return `422`.
+Part 1 originally exposed `/api/v1/observations/antartida` and only allowed the two Antarctic station ids. Part 2 requires allowing multiple stations, so the public path was renamed to a generic `/observations` endpoint that accepts any `station_id` string.
 
 Query parameters:
 
@@ -40,7 +41,7 @@ Query parameters:
 |-----------|----------|-------|
 | `start` | yes | Naive datetime, format `AAAA-MM-DDTHH:MM:SS` |
 | `end` | yes | Same format as `start` |
-| `station_id` | yes | `89064` (Juan Carlos I) or `89070` (Gabriel de Castilla) |
+| `station_id` | yes | Any non-empty AEMET station id (e.g. `89064`, `89070`, or other ids) |
 | `location` | no | IANA timezone for naive `start`/`end` (default `Europe/Madrid`); offsets like `+02:00` are rejected |
 | `time_aggregation` | no | `hourly`, `daily`, or `monthly`; omit for raw 10-minute samples |
 | `data_fields` | no | Repeatable: `temperature`, `pressure`, `speed`; omit for all three |
@@ -51,23 +52,20 @@ Example:
 curl "http://127.0.0.1:8000/api/v1/observations?start=2025-01-15T00:00:00&end=2025-01-15T06:00:00&station_id=89064&location=UTC"
 ```
 
-Response rows use field names `station`, `datetime`, `temperature`, `pressure`, `speed`. The `station` value is an object with `id` (AEMET station id) and `name` (AEMET `nombre`). The `datetime` value is always in `Europe/Madrid` with offset (CET/CEST).
+Response rows use field names `station`, `datetime`, `temperature`, `pressure`, `speed`. The `station` value is an object with `id` (AEMET station id) and `name` (station display name from AEMET). The `datetime` value is always in `Europe/Madrid` with offset (CET/CEST).
 
 When AEMET reports that no data matches the selection, the API returns an empty list (`200`). Other upstream failures (HTTP errors, unexpected AEMET responses) yield `502`. Antarctic stations often have no data in mid-winter.
 
-### Important: why not “all Spanish stations”?
+### Upstream AEMET products
 
-AEMET OpenData has **no single product** that is “Antartida but for every station”:
+AEMET has no single “any station + date range + 10‑min” product. The client routes by `station_id`:
 
-| Product | Date range? | Granularity | Same fields as Part 1? | Works for Antarctic? | Works for mainland? |
-|---------|-------------|-------------|------------------------|----------------------|---------------------|
-| **Antartida** (this service) | Yes | ~10 min | Yes (`nombre`/`fhora`/`temp`/`pres`/`vel`) | Yes | No (HATEOAS 404) |
-| Observación convencional | No (≈ last 24h) | ~hourly / recent | Different (`ubi`/`fint`/`ta`/`pres`/`vv`) | No | Yes |
-| Climatología diaria | Yes | Daily aggregates | Different (`tmed`/`velmedia`/…) | No | Yes |
+| Stations | OpenData product | Notes |
+|----------|------------------|-------|
+| Antarctic (`89064`, `89070`) | `/api/antartida/datos/fechaini/.../fechafin/.../estacion/{id}` | Historical window; ~10‑min; fields `nombre`/`fhora`/`temp`/`pres`/`vel` |
+| Everything else | `/api/observacion/convencional/datos/estacion/{id}` | Last ~24h only (no date params upstream); we filter by `start`/`end`; fields map `ubi`/`fint`/`ta`/`pres`/`vv` → same domain |
 
-Wiring mainland stations properly means a **second upstream client**, different input coverage (no historical window on convencional), and different payload → domain mapping. That is a real product change, not a URL swap.
-
-A **minimal dual-product experiment** (Antartida for Antarctic ids + observación convencional for others, shared HATEOAS helper, field remapping, client-side `start`/`end` filter) lives on git branch `archive/aemet-dual-product`. It was **not merged into `main`**: for a short take-home, supporting divergent AEMET endpoints and models is out of scope; Part 2 here keeps Antartida + SQLite cache + logging, with `station_id` limited to the two stations that product actually serves.
+So mainland/Canary queries only return rows that fall in both the requested window **and** AEMET’s recent convencional payload. Older historical ranges for those stations will be empty (climatología diaria exists but is a different daily-aggregate product — not wired).
 
 ### Station timezone (aggregation buckets)
 
@@ -146,23 +144,29 @@ Timezones:
 
 These are deliberate take-home choices, not silent bugs:
 
-- **Public path:** `GET /api/v1/observations` (renamed from Part 1’s `/antartida`). `station_id` allowlisted to `89064` / `89070`; upstream is Antartida only (see **Important: why not “all Spanish stations”?**).
+- **Public path:** `GET /api/v1/observations` (renamed from Part 1’s `/antartida` for Part 2). Upstream: Antartida for Antarctic ids, observación convencional for others (see table above).
 - **`location`:** assignment marks it optional. The use case always requires a timezone for naive `start`/`end`. The HTTP API defaults omitted `location` to `Europe/Madrid` so callers can skip it. IANA only; offsets like `+02:00` are rejected. `start`/`end` must be naive.
 - **Aggregation:** arithmetic **mean** of samples in each bucket (assignment does not specify the method).
 - **Cache:** v1 empty = miss / any rows = hit (see future gap-fill note above). No TTL / `fetched_at`, no negative cache for empty AEMET windows.
 - **Database URL:** the app does not create parent directories for file-based SQLite URLs; that is up to whoever configures `DATABASE_URL`.
 
+## CORS (frontend)
+
+When the SPA runs on another origin (e.g. Bun on `http://localhost:3000`) and calls `http://127.0.0.1:8000` directly, set `CORS_ORIGINS` to that origin list. The app then adds `CORSMiddleware` for `GET`/`OPTIONS`.
+
+If `CORS_ORIGINS` is empty or unset, no CORS middleware is registered. A Bun (or other) same-origin `/api` proxy does not need CORS — the browser only talks to the SPA origin.
+
 ## Security
 
 This assignment does **not** include authentication. The API has **no login, tokens, or API keys for callers**. That is acceptable for a local coding exercise and **not** suitable for production exposure.
 
-A production deployment would typically need: authn/authz (or strong network isolation), rate limiting, CORS locked to known frontends, secrets management for `AEMET_API_KEY`, sanitized error responses (avoid leaking upstream details), HTTPS, and least-privilege database access.
+A production deployment would typically need: authn/authz (or strong network isolation), rate limiting, secrets management for `AEMET_API_KEY`, sanitized error responses (avoid leaking upstream details), HTTPS, and least-privilege database access. Keep `CORS_ORIGINS` locked to known frontend origins (already supported; see **CORS** above).
 
 ## Production / scale gaps
 
 Out of scope for time / take-home size:
 
-- Merging multi-product AEMET adapters into `main` (see branch `archive/aemet-dual-product` and the section above).
+- Historical mainland series via climatología diaria (different granularity/fields); convencional only covers ~last day.
 - Cross-process cache-miss coordination, Alembic migrations, and leaving SQLite for PostgreSQL (+ Redis for distributed coalescing) — see **Scale / ops** under SQLite cache above.
 - Readiness probe that checks DB writability (today `/health` only returns `ok`).
 - Structured / request-id logging.

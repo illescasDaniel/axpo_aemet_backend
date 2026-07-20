@@ -145,3 +145,59 @@ async def test_given_invalid_observation_payload_when_fetching_then_raises_valid
         # when/then
         with pytest.raises(ValidationError):
             await client.fetch(_STATION_ID, _START, _END)
+
+
+_MAINLAND_ID = "3195"
+_CONVENCIONAL_URL = f"https://opendata.aemet.es/opendata/api/observacion/convencional/datos/estacion/{_MAINLAND_ID}"
+_CONV_DATA_URL = "https://opendata.aemet.es/opendata/api/observacion/convencional/data.json"
+
+
+def _convencional_hateoas() -> dict[str, object]:
+    return {
+        "descripcion": "exito",
+        "estado": 200,
+        "datos": _CONV_DATA_URL,
+        "metadatos": _META_URL,
+    }
+
+
+def _convencional_payload() -> list[dict[str, object]]:
+    return [
+        {
+            "ubi": "MADRID, RETIRO",
+            "fint": "2024-01-01T00:30:00+0000",
+            "ta": 8.1,
+            "pres": 940.0,
+            "vv": 2.5,
+        },
+        {
+            "ubi": "MADRID, RETIRO",
+            "fint": "2024-01-01T02:00:00+0000",
+            "ta": 7.0,
+            "pres": 941.0,
+            "vv": 1.0,
+        },
+    ]
+
+
+async def test_given_mainland_station_when_fetching_then_uses_convencional_url_and_maps_fields(
+    httpx2_mock: Router,
+):
+    # given
+    route = httpx2_mock.get(_CONVENCIONAL_URL).respond(json=_convencional_hateoas())
+    httpx2_mock.get(_CONV_DATA_URL).respond(json=_convencional_payload())
+
+    # when
+    async with httpx2.AsyncClient() as http:
+        client = AemetClient(http, api_key=_API_KEY)
+        rows = await client.fetch(_MAINLAND_ID, _START, _END)
+
+    # then
+    assert route.called
+    assert len(rows) == 1
+    assert rows[0].station.id == _MAINLAND_ID
+    assert rows[0].station.name == "MADRID, RETIRO"
+    assert rows[0].observed_at == datetime(2024, 1, 1, 0, 30, tzinfo=UTC)
+    assert rows[0].temperature_c == 8.1
+    assert rows[0].pressure_hpa == 940.0
+    assert rows[0].speed_ms == 2.5

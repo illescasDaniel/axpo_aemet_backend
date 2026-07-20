@@ -21,9 +21,13 @@ _CANARY_STATIONS = frozenset(
 )
 
 
+def is_antarctic_station(station_id: str) -> bool:
+    return station_id in _ANTARCTIC_STATIONS
+
+
 def station_location(station_id: str) -> ZoneInfo:
     """Timezone used for hourly/daily/monthly aggregation bucket boundaries."""
-    if station_id in _ANTARCTIC_STATIONS:
+    if is_antarctic_station(station_id):
         return _UTC
     if station_id in _CANARY_STATIONS:
         return _ATLANTIC_CANARY
