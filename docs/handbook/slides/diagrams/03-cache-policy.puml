@@ -1,0 +1,37 @@
+@startuml 03-cache-policy
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam activityFontSize 13
+skinparam ArrowColor #444444
+
+title Cache policy (v1) + SingleFlight
+
+start
+:Read SQLite range\n(station_id, start, end);
+
+if (Any rows?) then (yes — hit)
+  :Serve from cache\n(no AEMET call);
+else (no — miss)
+  :SingleFlight.do(key);
+  note right
+    Concurrent misses for the
+    **same key** share one fetch.
+  end note
+  :Fetch window from AEMET;
+  :Upsert raw samples;
+  :Serve result;
+endif
+
+:Optional aggregate / project\n**at read time**;
+stop
+
+legend right
+  |= Key design |
+  | Cache **raw** ~10-min samples |
+  | Aggregate hourly/daily/monthly on read |
+  | SingleFlight is **in-process** only |
+endlegend
+
+@enduml

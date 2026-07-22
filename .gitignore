@@ -17,3 +17,14 @@ htmlcov/
 # local SQLite cache
 data/*.db
 data/*.db-*
+
+# handbook build junk
+docs/handbook/.venv/
+docs/handbook/.tmp/
+docs/handbook/**/__pycache__/
+docs/handbook/slides/tools/
+docs/handbook/out/slide-checks/
+docs/handbook/out/slide-images/
+docs/handbook/slides/meteo-service-slides.html
+docs/handbook/slides/*-print.html
+docs/handbook/slides/preview.html

@@ -1,0 +1,55 @@
+@startuml 02-hexagonal
+!pragma layout smetana
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 13
+skinparam roundCorner 8
+skinparam packageBorderColor #555555
+skinparam packageFontStyle bold
+skinparam noteBackgroundColor #FFFDE7
+skinparam noteBorderColor #C9A227
+skinparam componentStyle rectangle
+
+title Hexagonal layout — observations
+
+package "Adapters (outside)" as adapters #F5F5F5 {
+  [FastAPI\nHTTP API] as api
+  [AemetClient] as aemet
+  [SqlAlchemyObservationRepository] as repo
+}
+
+package "Application" as app #E8F4FC {
+  [GetObservations\nuse case] as uc
+
+  ' Boxes (not () circles): smetana stacks interface labels on top of each other.
+  package "Ports" as ports #DCEEF8 {
+    [WeatherSource] as p_ws
+    [ObservationRepository] as p_repo
+    [UnitOfWork] as p_uow
+  }
+}
+
+package "Domain (centre)" as domain #FFF8E7 {
+  [Station] as station
+  [Observation] as obs
+}
+
+api --> uc : calls
+uc --> p_ws
+uc --> p_repo
+uc --> p_uow
+aemet ..|> p_ws : implements
+repo ..|> p_repo : implements
+uc --> obs : uses
+uc --> station : uses
+
+p_ws -[hidden]right- p_repo
+p_repo -[hidden]right- p_uow
+
+note bottom of app
+  Dependencies point inward.
+  Frameworks stay at the edges.
+end note
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml 01-request-flow
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 13
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Request flow — GET /api/v1/observations
+
+actor Client
+participant "API router" as API
+participant "GetObservations" as UC
+participant "Repository" as Repo
+participant "SingleFlight" as SF
+participant "AemetClient" as AEMET
+participant "UnitOfWork" as UoW
+
+Client -> API : query params
+API -> UC : execute(...)
+UC -> Repo : get_range(station, start, end)
+
+alt cache hit (any rows)
+  Repo --> UC : observations
+else cache miss (empty)
+  UC -> SF : do(key, fetch_and_upsert)
+  SF -> AEMET : fetch(...)
+  AEMET --> SF : observations
+  SF -> UoW : begin
+  SF -> Repo : upsert_many(...)
+  SF -> UoW : commit
+  SF --> UC : observations
+end
+
+UC --> API : ObservationView[]
+API --> Client : JSON
+
+@enduml

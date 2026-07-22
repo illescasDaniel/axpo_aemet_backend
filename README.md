@@ -168,3 +168,7 @@ Out of scope for time / take-home size:
 - Structured / request-id logging.
 - Cache freshness policy despite AEMET updating only a few times per day.
 - Exhaustive Canary (or Ceuta/Melilla) station catalogs for timezone resolution.
+
+## Handbook
+
+Longer architecture notes, PlantUML diagrams, and Marp slides live under [`docs/handbook/`](docs/handbook/). Build PDF/EPUB/slides from that folder (`uv run python build_docs.py` / `build_slides.py`); see its README.

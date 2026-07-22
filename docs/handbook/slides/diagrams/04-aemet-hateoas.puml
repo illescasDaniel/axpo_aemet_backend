@@ -1,0 +1,31 @@
+@startuml 04-aemet-hateoas
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 13
+skinparam sequenceMessageAlign center
+
+title AEMET Antartida — HATEOAS two-step
+
+participant "AemetClient" as C
+participant "AEMET OpenData" as A
+
+C -> A : GET /antartida/.../estacion/{id}\n+ api_key header
+A --> C : HATEOAS JSON\n(estado, datos URL, …)
+
+alt estado == 404
+  C --> C : return []
+else estado == 200
+  C -> A : GET datos URL
+  A --> C : observation array
+  C --> C : map → domain Observation
+else other
+  C --> C : raise RuntimeError
+end
+
+note over C, A
+  Callers must pass **UTC** datetimes.
+  Product: Antartida only on main.
+end note
+
+@enduml
