@@ -4,8 +4,10 @@ from fastapi import Depends, Request
 from httpx2 import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from meteo_service.observations.adapters.aemet.client import AemetClient
-from meteo_service.observations.adapters.database.observation_repository import SqlAlchemyObservationRepository
+from meteo_service.observations.adapters.aemet.aemet_client import AemetClient
+from meteo_service.observations.adapters.database.sqlalchemy_observation_repository import (
+    SqlAlchemyObservationRepository,
+)
 from meteo_service.observations.application.get_observations import GetObservations
 from meteo_service.observations.domain.observation import Observation
 from meteo_service.shared.adapters.sqlalchemy_unit_of_work import SqlAlchemyUnitOfWork

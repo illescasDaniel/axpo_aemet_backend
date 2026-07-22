@@ -7,7 +7,7 @@ from pathlib import Path
 import httpx2
 from dotenv import load_dotenv
 
-from meteo_service.observations.adapters.aemet.client import AemetClient
+from meteo_service.observations.adapters.aemet.aemet_client import AemetClient
 from meteo_service.shared.config import get_settings
 from meteo_service.shared.logging import configure_logging
 

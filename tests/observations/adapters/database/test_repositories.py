@@ -4,7 +4,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from tests.conftest import STATION_GDC, STATION_JCI
 
-from meteo_service.observations.adapters.database.observation_repository import SqlAlchemyObservationRepository
+from meteo_service.observations.adapters.database.sqlalchemy_observation_repository import (
+    SqlAlchemyObservationRepository,
+)
 from meteo_service.observations.domain.observation import Observation
 from meteo_service.observations.domain.station import Station
 from meteo_service.shared.adapters.sqlalchemy_unit_of_work import SqlAlchemyUnitOfWork

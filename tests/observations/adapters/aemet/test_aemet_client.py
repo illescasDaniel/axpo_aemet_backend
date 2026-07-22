@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 from respx import Router
 
-from meteo_service.observations.adapters.aemet.client import AemetClient
+from meteo_service.observations.adapters.aemet.aemet_client import AemetClient
 
 
 pytestmark = pytest.mark.unit
