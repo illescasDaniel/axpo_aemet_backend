@@ -49,4 +49,4 @@ Sources: `slides/deck.md`, `slides/diagrams/*.puml`. Generated SVG/PNG land in `
 
 ## Fact basis
 
-Chapters and slides describe the code under `../../src/` and `../../tests/` as implemented. Older notes in the monorepo `plan-docs/` are ideas only — do not treat them as truth if they disagree with the code.
+Chapters and slides describe the code under `../../src/` and `../../tests/` as implemented. Separate planning notes may exist during development; treat the shipped code as the source of truth if notes and code disagree.
