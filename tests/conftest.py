@@ -1,7 +1,8 @@
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
 import pytest
+from fastapi import FastAPI
 from httpx2 import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from tests.fakes.observation_repository import FakeObservationRepository
@@ -34,8 +35,7 @@ DEFAULT_ROWS = [
     )
 ]
 
-type OverrideUseCase = Callable[[Callable[[], GetObservations]], None]
-type ApiClientFixture = tuple[AsyncClient, OverrideUseCase]
+type ApiClientFixture = tuple[AsyncClient, FastAPI]
 
 
 QueryParamValue = str | list[str]
@@ -76,11 +76,7 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 async def api_client() -> AsyncGenerator[ApiClientFixture, None]:
     app = create_app(TEST_SETTINGS)
     app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource([]))
-
-    def override_use_case(factory: Callable[[], GetObservations]):
-        app.dependency_overrides[get_observations_use_case] = factory
-
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-        yield client, override_use_case
+        yield client, app
     app.dependency_overrides.clear()

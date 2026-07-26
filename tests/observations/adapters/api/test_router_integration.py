@@ -12,6 +12,7 @@ from tests.conftest import (
 )
 from tests.fakes.weather_source import FailingWeatherSource, FakeWeatherSource
 
+from meteo_service.observations.adapters.api.dependencies import get_observations_use_case
 from meteo_service.observations.domain.observation import Observation
 
 
@@ -20,8 +21,10 @@ pytestmark = pytest.mark.integration
 
 async def test_given_valid_query_when_getting_observations_then_returns_mapped_json(api_client: ApiClientFixture):
     # given
-    client, override = api_client
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(DEFAULT_ROWS)))
+    client, app = api_client
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(
+        FakeWeatherSource(DEFAULT_ROWS)
+    )
 
     # when
     response = await client.get(
@@ -46,8 +49,10 @@ async def test_given_valid_query_without_data_fields_when_getting_observations_t
     api_client: ApiClientFixture,
 ):
     # given
-    client, override = api_client
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(DEFAULT_ROWS)))
+    client, app = api_client
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(
+        FakeWeatherSource(DEFAULT_ROWS)
+    )
 
     # when
     response = await client.get(OBSERVATIONS_PATH, params=valid_params())
@@ -64,7 +69,7 @@ async def test_given_hourly_aggregation_when_getting_observations_then_returns_b
     api_client: ApiClientFixture,
 ):
     # given
-    client, override = api_client
+    client, app = api_client
     rows = [
         Observation(
             station=STATION_JCI,
@@ -81,7 +86,7 @@ async def test_given_hourly_aggregation_when_getting_observations_then_returns_b
             speed_ms=6.0,
         ),
     ]
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(rows)))
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource(rows))
 
     # when
     response = await client.get(
@@ -102,7 +107,7 @@ async def test_given_daily_aggregation_when_getting_observations_then_returns_si
     api_client: ApiClientFixture,
 ):
     # given
-    client, override = api_client
+    client, app = api_client
     rows = [
         Observation(
             station=STATION_JCI,
@@ -119,7 +124,7 @@ async def test_given_daily_aggregation_when_getting_observations_then_returns_si
             speed_ms=6.0,
         ),
     ]
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(rows)))
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource(rows))
 
     # when
     response = await client.get(
@@ -142,7 +147,7 @@ async def test_given_monthly_aggregation_when_getting_observations_then_returns_
     api_client: ApiClientFixture,
 ):
     # given
-    client, override = api_client
+    client, app = api_client
     rows = [
         Observation(
             station=STATION_JCI,
@@ -166,7 +171,7 @@ async def test_given_monthly_aggregation_when_getting_observations_then_returns_
             speed_ms=8.0,
         ),
     ]
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(rows)))
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource(rows))
 
     # when
     response = await client.get(
@@ -190,7 +195,7 @@ async def test_given_monthly_aggregation_when_getting_observations_then_returns_
 
 async def test_given_winter_observation_when_getting_observations_then_returns_cet_offset(api_client: ApiClientFixture):
     # given
-    client, override = api_client
+    client, app = api_client
     rows = [
         Observation(
             station=STATION_JCI,
@@ -200,7 +205,7 @@ async def test_given_winter_observation_when_getting_observations_then_returns_c
             speed_ms=5.0,
         )
     ]
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(rows)))
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource(rows))
 
     # when
     response = await client.get(
@@ -220,7 +225,7 @@ async def test_given_summer_observation_when_getting_observations_then_returns_c
     api_client: ApiClientFixture,
 ):
     # given
-    client, override = api_client
+    client, app = api_client
     rows = [
         Observation(
             station=STATION_JCI,
@@ -230,7 +235,7 @@ async def test_given_summer_observation_when_getting_observations_then_returns_c
             speed_ms=7.0,
         )
     ]
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(rows)))
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource(rows))
 
     # when
     response = await client.get(
@@ -248,7 +253,7 @@ async def test_given_summer_observation_when_getting_observations_then_returns_c
 
 async def test_given_gabriel_station_when_getting_observations_then_returns_data(api_client: ApiClientFixture):
     # given
-    client, override = api_client
+    client, app = api_client
     rows = [
         Observation(
             station=STATION_GDC,
@@ -258,7 +263,7 @@ async def test_given_gabriel_station_when_getting_observations_then_returns_data
             speed_ms=11.0,
         )
     ]
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(rows)))
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource(rows))
 
     # when
     response = await client.get(
@@ -277,8 +282,8 @@ async def test_given_gabriel_station_when_getting_observations_then_returns_data
 
 async def test_given_no_matching_rows_when_getting_observations_then_returns_empty_list(api_client: ApiClientFixture):
     # given
-    client, override = api_client
-    override(lambda: get_observations_with_fakes(FakeWeatherSource([])))
+    client, app = api_client
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FakeWeatherSource([]))
 
     # when
     response = await client.get(OBSERVATIONS_PATH, params=valid_params())
@@ -290,8 +295,8 @@ async def test_given_no_matching_rows_when_getting_observations_then_returns_emp
 
 async def test_given_aemet_error_when_getting_observations_then_returns_502(api_client: ApiClientFixture):
     # given
-    client, override = api_client
-    override(lambda: get_observations_with_fakes(FailingWeatherSource()))
+    client, app = api_client
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(FailingWeatherSource())
 
     # when
     response = await client.get(OBSERVATIONS_PATH, params=valid_params())
@@ -305,7 +310,7 @@ async def test_given_unknown_station_id_when_getting_observations_then_returns_4
     api_client: ApiClientFixture,
 ):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
@@ -319,7 +324,7 @@ async def test_given_unknown_station_id_when_getting_observations_then_returns_4
 
 async def test_given_empty_station_id_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
@@ -335,8 +340,10 @@ async def test_given_omitted_location_when_getting_observations_then_defaults_to
     api_client: ApiClientFixture,
 ):
     # given — DEFAULT_ROWS sample is 10:10 UTC (= 11:10 Europe/Madrid in January)
-    client, override = api_client
-    override(lambda: get_observations_with_fakes(FakeWeatherSource(DEFAULT_ROWS)))
+    client, app = api_client
+    app.dependency_overrides[get_observations_use_case] = lambda: get_observations_with_fakes(
+        FakeWeatherSource(DEFAULT_ROWS)
+    )
     params = {
         "start": "2024-01-01T11:00:00",
         "end": "2024-01-01T12:00:00",
@@ -353,7 +360,7 @@ async def test_given_omitted_location_when_getting_observations_then_defaults_to
 
 async def test_given_offset_location_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
@@ -367,7 +374,7 @@ async def test_given_offset_location_when_getting_observations_then_returns_422(
 
 async def test_given_invalid_iana_location_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
@@ -381,7 +388,7 @@ async def test_given_invalid_iana_location_when_getting_observations_then_return
 
 async def test_given_start_after_end_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
@@ -395,7 +402,7 @@ async def test_given_start_after_end_when_getting_observations_then_returns_422(
 
 async def test_given_missing_required_param_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when — station_id is required; location has a default
     response = await client.get(
@@ -413,7 +420,7 @@ async def test_given_missing_required_param_when_getting_observations_then_retur
 
 async def test_given_invalid_datetime_format_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
@@ -427,7 +434,7 @@ async def test_given_invalid_datetime_format_when_getting_observations_then_retu
 
 async def test_given_invalid_time_aggregation_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
@@ -441,7 +448,7 @@ async def test_given_invalid_time_aggregation_when_getting_observations_then_ret
 
 async def test_given_invalid_data_field_when_getting_observations_then_returns_422(api_client: ApiClientFixture):
     # given
-    client, _override = api_client
+    client, _app = api_client
 
     # when
     response = await client.get(
