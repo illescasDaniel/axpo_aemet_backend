@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-def configure_logging(level: int = logging.INFO) -> logging.Logger:
+def configure_logging(level: int = logging.INFO):
     logging.basicConfig(
         level=level,
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
@@ -10,4 +10,3 @@ def configure_logging(level: int = logging.INFO) -> logging.Logger:
         stream=sys.stderr,
         force=True,
     )
-    return logging.getLogger("meteo_service")

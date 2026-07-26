@@ -18,7 +18,7 @@ _STATION_ID = "89064"
 
 
 async def main():
-    _ = configure_logging()
+    configure_logging()
     get_settings.cache_clear()
     settings = get_settings()
 
