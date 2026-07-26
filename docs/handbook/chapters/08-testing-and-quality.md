@@ -6,14 +6,17 @@
 tests/
 ├── conftest.py
 ├── fakes/                    # FakeObservationRepository, FakeWeatherSource, FakeUnitOfWork, …
-├── test_health.py
 ├── observations/
 │   ├── application/          # unit: cache, aggregation, single-flight
 │   └── adapters/
 │       ├── aemet/            # httpx2 mock / Router
 │       ├── api/              # ASGI integration + schema tests
 │       └── database/         # in-memory SQLite
-└── shared/                   # CORS, Database pragmas, SqlAlchemy UoW
+└── shared/
+    ├── test_database.py      # Database pragmas
+    └── adapters/
+        ├── api/              # health, CORS (mirrors shared/adapters/api)
+        └── test_sqlalchemy_unit_of_work.py
 ```
 
 Markers: `@pytest.mark.unit` / `integration`. Naming style: `given_…_when_…_then_…`.

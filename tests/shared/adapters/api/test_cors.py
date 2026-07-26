@@ -1,5 +1,8 @@
+from typing import AsyncGenerator
+
 import pytest
-from httpx2 import ASGITransport, AsyncClient
+from httpx2 import ASGITransport
+from httpx2._client import AsyncClient
 
 from meteo_service.shared.adapters.api.app import create_app
 from meteo_service.shared.config import Settings
@@ -18,7 +21,7 @@ def _settings(*, cors_origins: list[str]) -> Settings:
 
 
 @pytest.fixture
-async def cors_client():
+async def cors_client() -> AsyncGenerator[AsyncClient, None]:
     app = create_app(_settings(cors_origins=[ALLOWED_ORIGIN]))
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
