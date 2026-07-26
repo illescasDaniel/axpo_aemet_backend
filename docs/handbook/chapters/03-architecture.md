@@ -18,7 +18,7 @@ That lets you:
 
 ```text
 src/meteo_service/
-├── main.py                          # app = create_app()
+├── main.py                          # app = create_app(get_settings())
 ├── observations/
 │   ├── domain/                      # entities only
 │   ├── application/                 # use case + ports + views

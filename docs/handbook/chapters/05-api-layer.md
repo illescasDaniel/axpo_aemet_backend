@@ -2,7 +2,7 @@
 
 ## App entry
 
-- `meteo_service.main:app` → `create_app()` in `shared/adapters/api/app.py`
+- `meteo_service.main:app` → `create_app(get_settings())` in `shared/adapters/api/app.py`
 - Lifespan (`shared/adapters/api/lifespan.py`) opens `Database`, shared `httpx2.AsyncClient` (60s timeout), and process-wide `SingleFlight`
 
 ## Routes

@@ -2,12 +2,14 @@ from typing import AsyncGenerator
 
 import pytest
 from httpx2 import ASGITransport, AsyncClient
+from tests.settings import TEST_SETTINGS
 
-from meteo_service.main import app
+from meteo_service.shared.adapters.api.app import create_app
 
 
 @pytest.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
+    app = create_app(TEST_SETTINGS)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
         yield ac

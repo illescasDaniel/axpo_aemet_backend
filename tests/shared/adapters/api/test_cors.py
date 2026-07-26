@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 import pytest
 from httpx2 import ASGITransport
 from httpx2._client import AsyncClient
+from tests.settings import TEST_SETTINGS
 
 from meteo_service.shared.adapters.api.app import create_app
 from meteo_service.shared.config import Settings
@@ -13,11 +14,7 @@ OTHER_ORIGIN = "http://evil.example"
 
 
 def _settings(*, cors_origins: list[str]) -> Settings:
-    return Settings(
-        aemet_api_key="test-key",
-        database_url="sqlite+aiosqlite:///:memory:",
-        cors_origins=cors_origins,
-    )
+    return TEST_SETTINGS.model_copy(update={"cors_origins": cors_origins})
 
 
 @pytest.fixture

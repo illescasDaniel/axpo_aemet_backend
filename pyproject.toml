@@ -81,7 +81,7 @@ markers = [
 [tool.taskipy.tasks]
 dev = "uv run fastapi dev"
 run = "uv run fastapi run"
-tests = "AEMET_API_KEY=test-aemet-key DATABASE_URL=sqlite+aiosqlite:///:memory: uv run pytest"
+tests = "uv run pytest"
 format = "uv run ruff check --fix src tests && uv run ruff format src tests"
 checks = "./scripts/quality/checks.sh"
 checks-fix = "./scripts/quality/checks.sh --fix"
