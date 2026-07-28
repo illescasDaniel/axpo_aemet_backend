@@ -10,13 +10,14 @@ from meteo_service.observations.adapters.database.sqlalchemy_observation_reposit
 )
 from meteo_service.observations.application.get_observations import GetObservations
 from meteo_service.observations.domain.observation import Observation
+from meteo_service.shared.adapters.api.app_state import get_app_state
 from meteo_service.shared.adapters.sqlalchemy_unit_of_work import SqlAlchemyUnitOfWork
 from meteo_service.shared.config import Settings, get_settings
 from meteo_service.shared.single_flight import SingleFlight
 
 
 def get_http_client(request: Request) -> AsyncClient:
-    return request.app.state.http_client
+    return get_app_state(request).http_client
 
 
 def get_weather_source(
@@ -27,7 +28,7 @@ def get_weather_source(
 
 
 async def get_session(request: Request) -> AsyncGenerator[AsyncSession, None]:
-    async with request.app.state.db.session() as session:
+    async with get_app_state(request).db.session() as session:
         yield session
 
 
@@ -44,7 +45,7 @@ def get_unit_of_work(
 
 
 def get_single_flight(request: Request) -> SingleFlight[list[Observation]]:
-    return request.app.state.single_flight
+    return get_app_state(request).single_flight
 
 
 def get_observations_use_case(
