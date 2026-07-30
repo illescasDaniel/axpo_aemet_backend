@@ -14,4 +14,4 @@ class SingleFlight[T]:
             task = asyncio.create_task(factory())
             self._inflight[key] = task
             task.add_done_callback(lambda _: self._inflight.pop(key, None))
-        return await task
+        return await asyncio.shield(task)
